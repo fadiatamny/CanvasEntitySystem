@@ -8,6 +8,7 @@
     "lint-staged": "lint-staged --debug"
   },
   "devDependencies": {
+    "@types/uuid": "^8.3.3",
     "@typescript-eslint/eslint-plugin": "^5.6.0",
     "@typescript-eslint/parser": "^5.6.0",
     "eslint": "^8.4.1",
@@ -19,7 +20,8 @@
     "vite": "^2.7.0"
   },
   "dependencies": {
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "uuid": "^8.3.2"
   },
   "lint-staged": {
     "*.ts": [
