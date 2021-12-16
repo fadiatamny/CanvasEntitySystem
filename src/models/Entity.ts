@@ -49,7 +49,7 @@ export abstract class Entity {
     }
 
     public abstract render(ctx: WebGL2RenderingContext): Promise<void>
-    public abstract translate(ctx: WebGL2RenderingContext): Promise<void>
-    public abstract scale(ctx: WebGL2RenderingContext): Promise<void>
-    public abstract rotate(ctx: WebGL2RenderingContext): Promise<void>
+    // public abstract translate(ctx: WebGL2RenderingContext): Promise<void>
+    // public abstract scale(ctx: WebGL2RenderingContext): Promise<void>
+    // public abstract rotate(ctx: WebGL2RenderingContext): Promise<void>
 }

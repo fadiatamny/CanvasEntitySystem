@@ -15,10 +15,11 @@ module.exports = {
                 semi: false,
                 trailingComma: 'none',
                 singleQuote: true,
-                printWidth: 120,
+                printWidth: 150,
                 tabWidth: 4,
                 arrowPerins: 'always',
-                endOfLine: 'auto'
+                endOfLine: 'auto',
+                bracketSpacing: true
             }
         ],
         // Place to specify ESLint rules. Can be used to overwrite rules specified from the extended configs
