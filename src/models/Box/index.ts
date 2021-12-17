@@ -1,19 +1,20 @@
 import { Entity } from '..'
-import { makeShader, normalizeToGlValue } from '../../utils'
+import { makeShader, OrthoCamMatrix } from '../../utils'
 import VertexShader from './shaders/vertex.glsl'
-import FragmentShader from './shaders/vertex.glsl'
+import FragmentShader from './shaders/fragment.glsl'
 
 export class Box extends Entity {
-    private static zIndex = 1
-    private _program: WebGLProgram | null
+    private static zIndex = 0.1
+    private static _program: WebGLProgram | null = null
+    private rgb: number[]
 
-    constructor(left: number, top: number, width: number, height: number) {
+    constructor(left: number, top: number, width: number, height: number, opactiy = 1) {
         super({ left, top, width, height })
-        this._program = null
+        this._opacity = opactiy
+        this.rgb = [Math.random(), Math.random(), Math.random()]
     }
 
-    private _initShaders(ctx: WebGL2RenderingContext) {
-        // Compile shaders
+    private static initShaders(ctx: WebGL2RenderingContext) {
         const vertexShader = makeShader(ctx, VertexShader, ctx.VERTEX_SHADER)
         const fragmentShader = makeShader(ctx, FragmentShader, ctx.FRAGMENT_SHADER)
 
@@ -38,22 +39,33 @@ export class Box extends Entity {
 
         // Use program
         ctx.useProgram(this._program)
-        // ctx.program = glProgram
 
         return true
     }
 
+    private _genCamera(ctx: WebGL2RenderingContext) {
+        // Generating The ortho camera
+        const proj = ctx.getUniformLocation(Box._program!, 'proj')
+        if (!proj || proj < 0) {
+            console.log('Failed to get the storage location of proj')
+            return -1
+        }
+        const matrix = OrthoCamMatrix(ctx.canvas)
+        ctx.uniformMatrix4fv(proj, false, matrix.values)
+    }
+
     private _getVerticies(ctx: WebGL2RenderingContext) {
-        if (!this._program) {
+        if (!Box._program) {
             return -1
         }
 
         // Vertices
         const dim = 3
-        const top = normalizeToGlValue(this.top, ctx.canvas)
-        const left = normalizeToGlValue(this.left, ctx.canvas)
-        const bottom = normalizeToGlValue(this.top + this.height, ctx.canvas)
-        const right = normalizeToGlValue(this.left + this.width, ctx.canvas)
+        const top = this.top
+        const left = this.left
+        const bottom = this.top + this.height
+        const right = this.left + this.width
+
         const vertices = new Float32Array([
             // triangle 1
             left,
@@ -82,8 +94,28 @@ export class Box extends Entity {
             Box.zIndex
         ])
 
+        const vUv = new Float32Array([
+            // triangle 1
+            0, 0,
+
+            1, 0,
+
+            0, 1,
+
+            // triagnle 2
+            1, 1,
+
+            0, 1,
+
+            1, 0
+        ])
+
+        // const rgb = [0.0, 1, 0.0]
+
+        // Fragment fill
+        const fill = [...this.rgb, this.opacity]
         // Fragment color
-        const rgba = [0.0, 1, 0.0, 1.0]
+        const color = [...this.rgb, 1]
 
         // Create a buffer object
         const vertexBuffer = ctx.createBuffer()
@@ -95,7 +127,7 @@ export class Box extends Entity {
         ctx.bufferData(ctx.ARRAY_BUFFER, vertices, ctx.STATIC_DRAW)
 
         // Assign the vertices in buffer object to a_Position variable
-        const a_Position = ctx.getAttribLocation(this._program, 'a_Position')
+        const a_Position = ctx.getAttribLocation(Box._program, 'a_Position')
         if (a_Position < 0) {
             console.log('Failed to get the storage location of a_Position')
             return -1
@@ -103,24 +135,60 @@ export class Box extends Entity {
         ctx.vertexAttribPointer(a_Position, dim, ctx.FLOAT, false, 0, 0)
         ctx.enableVertexAttribArray(a_Position)
 
-        // Assign the color to u_FragColor variable
-        const u_FragColor = ctx.getUniformLocation(this._program, 'u_FragColor')
-        if (!u_FragColor || u_FragColor < 0) {
-            console.log('Failed to get the storage location of u_FragColor')
+        // Create a buffer object
+        const vUvBuffer = ctx.createBuffer()
+        if (!vertexBuffer) {
+            console.log('Failed to create the buffer object')
             return -1
         }
-        ctx.uniform4fv(u_FragColor, rgba)
+        ctx.bindBuffer(ctx.ARRAY_BUFFER, vUvBuffer)
+        ctx.bufferData(ctx.ARRAY_BUFFER, vUv, ctx.STATIC_DRAW)
+        const a_uv = ctx.getAttribLocation(Box._program, 'a_uv')
+        if (a_uv < 0) {
+            console.log('Failed to get the storage location of a_uv')
+            return -1
+        }
+        ctx.vertexAttribPointer(a_uv, 2, ctx.FLOAT, false, 0, 0)
+        ctx.enableVertexAttribArray(a_uv)
+
+        // Assign the color variables
+        let uniform = ctx.getUniformLocation(Box._program, 'innerCol')
+        if (!uniform || uniform < 0) {
+            console.log('Failed to get the storage location of innerCol')
+            return -1
+        }
+        ctx.uniform4fv(uniform, fill)
+        uniform = ctx.getUniformLocation(Box._program, 'strokeCol')
+        if (!uniform || uniform < 0) {
+            console.log('Failed to get the storage location of strokeCol')
+            return -1
+        }
+        ctx.uniform4fv(uniform, color)
+        uniform = ctx.getUniformLocation(Box._program, 'borderWidth')
+        if (!uniform || uniform < 0) {
+            console.log('Failed to get the storage location of borderWidth')
+            return -1
+        }
+        ctx.uniform1f(uniform, 5) //borderWidth)
+        uniform = ctx.getUniformLocation(Box._program, 'dims')
+        if (!uniform || uniform < 0) {
+            console.log('Failed to get the storage location of dims')
+            return -1
+        }
+        ctx.uniform2fv(uniform, new Float32Array([ctx.canvas.width, ctx.canvas.height]))
 
         // Return number of vertices
         return vertices.length / dim
     }
 
     public async render(ctx: WebGL2RenderingContext) {
-        if (!this._program) {
-            this._initShaders(ctx)
+        if (!Box._program) {
+            Box.initShaders(ctx)
         }
 
+        this._genCamera(ctx)
         const verticies = this._getVerticies(ctx)
+
         // Draw
         ctx.drawArrays(ctx.TRIANGLES, 0, verticies)
     }

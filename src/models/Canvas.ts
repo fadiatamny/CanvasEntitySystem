@@ -16,6 +16,10 @@ export class Canvas {
         if (!this._context) {
             throw new Error('couldnt initialize main context')
         }
+
+        this.context.clearColor(0, 0, 0, 1)
+        this.context.enable(this.context.BLEND)
+        this.context.blendFunc(this.context.SRC_ALPHA, this.context.DST_ALPHA)
     }
 
     public get element() {
@@ -33,6 +37,8 @@ export class Canvas {
     }
 
     public render() {
+        this.context.clear(this.context.COLOR_BUFFER_BIT | this.context.DEPTH_BUFFER_BIT)
+
         for (const e of this._entities) {
             e.render(this.context)
         }

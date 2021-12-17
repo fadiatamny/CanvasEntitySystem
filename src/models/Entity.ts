@@ -8,11 +8,13 @@ export abstract class Entity {
 
     // private eventManager: EventManager
     private id: string
-    protected _data: any
+    protected _data: any // compressed bitarray
     protected _top: number
     protected _left: number
     protected _width: number
     protected _height: number
+    protected _opacity: number
+    protected _isDirty: boolean
 
     public get data() {
         return this._data
@@ -29,6 +31,15 @@ export abstract class Entity {
     public get height() {
         return this._height
     }
+    public get opacity() {
+        return this._opacity
+    }
+    public get isDirty() {
+        return this._isDirty
+    }
+    public set isDirty(val: boolean) {
+        this._isDirty = val
+    }
 
     constructor(entity?: Partial<Entity>) {
         this.id = uuid()
@@ -36,6 +47,8 @@ export abstract class Entity {
         this._top = entity?.top ?? 0
         this._width = entity?.width ?? 0
         this._height = entity?.height ?? 0
+        this._opacity = entity?.opacity ?? 1
+        this._isDirty = true
     }
 
     public toJson(): Dictionary {
