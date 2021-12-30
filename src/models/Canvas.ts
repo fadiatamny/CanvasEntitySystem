@@ -20,6 +20,7 @@ export class Canvas {
         this.context.clearColor(0, 0, 0, 1)
         this.context.enable(this.context.BLEND)
         this.context.blendFunc(this.context.SRC_ALPHA, this.context.DST_ALPHA)
+        this.context.clear(this.context.COLOR_BUFFER_BIT | this.context.DEPTH_BUFFER_BIT)
     }
 
     public get element() {
@@ -37,10 +38,16 @@ export class Canvas {
     }
 
     public render() {
-        this.context.clear(this.context.COLOR_BUFFER_BIT | this.context.DEPTH_BUFFER_BIT)
+        const needsUpdate = this._entities.find((e) => e.isDirty)
+        if (needsUpdate) {
+            const t0 = performance.now()
+            this.context.clear(this.context.COLOR_BUFFER_BIT | this.context.DEPTH_BUFFER_BIT)
 
-        for (const e of this._entities) {
-            e.render(this.context)
+            for (const e of this._entities) {
+                e.render(this.context)
+            }
+            const t1 = performance.now()
+            console.log(`Call to render ${this._entities.length} entities took ${t1 - t0} milliseconds.`)
         }
         requestAnimationFrame(this.render.bind(this))
     }

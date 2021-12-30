@@ -23,7 +23,6 @@ void main() {
     if (borderSize.x < pixel.x && borderSize.y < pixel.y &&
         pixel.x < textureEnd.x && pixel.y < textureEnd.y )
     {
-        // pixel = mapTo(borderSize, textureEnd , vec2(0.0) ,vec2(1.0), pixel);
         color = innerCol;
     }
     else 
