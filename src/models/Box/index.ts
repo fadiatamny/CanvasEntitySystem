@@ -1,5 +1,5 @@
 import { Entity } from '..'
-import { makeShader, OrthoCamMatrix } from '../../utils'
+import { GLUtils } from '../../utils'
 import VertexShader from './shaders/vertex.glsl'
 import FragmentShader from './shaders/fragment.glsl'
 
@@ -14,6 +14,7 @@ export class Box extends Entity {
     private _vertexDims!: number
     private _fill!: number[]
     private _color!: number[]
+    private _vao!: WebGLVertexArrayObject
 
     constructor(left: number, top: number, width: number, height: number, opactiy = 1) {
         super({ left, top, width, height })
@@ -23,8 +24,8 @@ export class Box extends Entity {
     }
 
     private static initShaders(ctx: WebGL2RenderingContext) {
-        const vertexShader = makeShader(ctx, VertexShader, ctx.VERTEX_SHADER)
-        const fragmentShader = makeShader(ctx, FragmentShader, ctx.FRAGMENT_SHADER)
+        const vertexShader = GLUtils.makeShader(ctx, VertexShader, ctx.VERTEX_SHADER)
+        const fragmentShader = GLUtils.makeShader(ctx, FragmentShader, ctx.FRAGMENT_SHADER)
 
         if (!vertexShader || !fragmentShader) {
             return false
@@ -45,21 +46,7 @@ export class Box extends Entity {
             return false
         }
 
-        // Use program
-        ctx.useProgram(this._program)
-
         return true
-    }
-
-    private _genCamera(ctx: WebGL2RenderingContext) {
-        // Generating The ortho camera
-        const proj = ctx.getUniformLocation(Box._program!, 'proj')
-        if (!proj || proj < 0) {
-            console.log('Failed to get the storage location of proj')
-            return -1
-        }
-        const matrix = OrthoCamMatrix(ctx.canvas)
-        ctx.uniformMatrix4fv(proj, false, matrix.values)
     }
 
     public genData() {
@@ -122,10 +109,16 @@ export class Box extends Entity {
         this._color = [...this._rgb, 1]
     }
 
-    private _bindBuffers(ctx: WebGL2RenderingContext) {
+    private _bindVertexBuffers(ctx: WebGL2RenderingContext) {
         if (!Box._program) {
             return
         }
+        this._vao = ctx.createVertexArray() as WebGLVertexArrayObject
+        if (!this._vao) {
+            // ERROR OCCURED ?!? OUT OF MEMORRYYYYYYYYYYYY
+        }
+
+        ctx.bindVertexArray(this._vao)
 
         // Create a buffer object
         const vertexBuffer = ctx.createBuffer()
@@ -162,6 +155,13 @@ export class Box extends Entity {
         ctx.vertexAttribPointer(attribute, 2, ctx.FLOAT, false, 0, 0)
         ctx.enableVertexAttribArray(attribute)
 
+        ctx.bindVertexArray(null)
+    }
+
+    private _bindShaderBuffers(ctx: WebGL2RenderingContext) {
+        if (!Box._program) {
+            return
+        }
         // Assign the color variables
         let uniform = ctx.getUniformLocation(Box._program, 'innerCol')
         if (!uniform || uniform < 0) {
@@ -193,11 +193,16 @@ export class Box extends Entity {
         if (!Box._program) {
             Box.initShaders(ctx)
         }
+        if (this.isDirty) {
+            this._bindVertexBuffers(ctx)
+            this.isDirty = false
+        }
 
-        this._genCamera(ctx)
-        this._bindBuffers(ctx)
-        this.isDirty = false
-
+        ctx.useProgram(Box._program)
+        GLUtils.genCamera(ctx, Box._program!)
+        ctx.bindVertexArray(this._vao)
+        this._bindShaderBuffers(ctx)
         ctx.drawArrays(ctx.TRIANGLES, 0, this._verticesCount)
+        ctx.bindVertexArray(null)
     }
 }

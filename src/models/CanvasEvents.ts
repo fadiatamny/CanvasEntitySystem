@@ -1,5 +1,5 @@
 import { Box, Canvas, Coordinate, Dictionary } from '.'
-import { getRelativeCanvasMousePosition } from '../utils'
+import { GLUtils } from '../utils'
 
 export enum CanvasEventTypes {
     MOUSE_MOVE = 'mousemove',
@@ -19,15 +19,16 @@ export class CanvasEvents {
     }
 
     private _mouseDown(e: MouseEvent) {
-        this._mDown = getRelativeCanvasMousePosition(e, this._canvas.element)
+        this._mDown = GLUtils.getRelativeCanvasMousePosition(e, this._canvas.element)
     }
 
     private _mouseUp(e: MouseEvent) {
         if (!this._mDown) {
             return
         }
-        const pos = getRelativeCanvasMousePosition(e, this._canvas.element)
+        const pos = GLUtils.getRelativeCanvasMousePosition(e, this._canvas.element)
         this._canvas.add(new Box(this._mDown.x, this._mDown.y, pos.x - this._mDown.x, pos.y - this._mDown.y, Math.random()))
+        this._canvas.needsUpdate = true
         this._mDown = null
     }
 

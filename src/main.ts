@@ -12,8 +12,6 @@ canvas.render()
 
 const events = new CanvasEvents(canvas)
 
-// const box = new Box(200, 200, 500, 500, 0.5)
-
 const entityCount = 10000
 
 for (let i = 0; i < entityCount; i++) {
@@ -21,4 +19,5 @@ for (let i = 0; i < entityCount; i++) {
     const y = Math.random() * canvas.element.height
     canvas.add(new Box(x, y, Math.random() * canvas.element.width - x, Math.random() * canvas.element.height - y, Math.random()))
 }
+canvas.needsUpdate = true
 // canvas.add(box)
