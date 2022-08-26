@@ -1,5 +1,5 @@
 import { Entity } from '..'
-import { GLUtils } from '../../utils'
+import { degrees_to_radians, GLUtils } from '../../utils'
 import VertexShader from './shaders/vertex.glsl'
 import FragmentShader from './shaders/fragment.glsl'
 
@@ -16,9 +16,8 @@ export class Box extends Entity {
     private _color!: number[]
     private _vao!: WebGLVertexArrayObject
 
-    constructor(left: number, top: number, width: number, height: number, opactiy = 1) {
-        super({ left, top, width, height })
-        this._opacity = opactiy
+    constructor(box: Pick<Box, 'left' | 'top' | 'width' | 'height' | 'angle' | 'opacity'>) {
+        super(box)
         this._rgb = [Math.random(), Math.random(), Math.random()]
         this.genData()
     }
@@ -133,24 +132,25 @@ export class Box extends Entity {
         const a_Position = ctx.getAttribLocation(Box._program, 'a_Position')
         if (a_Position < 0) {
             console.log('Failed to get the storage location of a_Position')
-            return -1
+            return
         }
         ctx.vertexAttribPointer(a_Position, this._vertexDims, ctx.FLOAT, false, 0, 0)
         ctx.enableVertexAttribArray(a_Position)
 
         // Create a buffer object
-
         const vUvBuffer = ctx.createBuffer()
         if (!vertexBuffer) {
             console.log('Failed to create the buffer object')
-            return -1
+            return
         }
         ctx.bindBuffer(ctx.ARRAY_BUFFER, vUvBuffer)
         ctx.bufferData(ctx.ARRAY_BUFFER, this._vUv, ctx.STATIC_DRAW)
+
+        // Assign the vertices in buffer object to a_uv variable
         const attribute = ctx.getAttribLocation(Box._program, 'a_uv')
         if (attribute < 0) {
             console.log('Failed to get the storage location of a_uv')
-            return -1
+            return
         }
         ctx.vertexAttribPointer(attribute, 2, ctx.FLOAT, false, 0, 0)
         ctx.enableVertexAttribArray(attribute)
@@ -187,6 +187,18 @@ export class Box extends Entity {
             return
         }
         ctx.uniform2fv(uniform, new Float32Array([ctx.canvas.width, ctx.canvas.height]))
+        uniform = ctx.getUniformLocation(Box._program, 'rotation')
+        if (!uniform || uniform < 0) {
+            console.log('Failed to get the storage location of rotation')
+            return
+        }
+        ctx.uniform1f(uniform, degrees_to_radians(this._angle))
+        uniform = ctx.getUniformLocation(Box._program, 'center')
+        if (!uniform || uniform < 0) {
+            console.log('Failed to get the storage location of center')
+            return
+        }
+        ctx.uniform3fv(uniform, new Float32Array([this.center.x, this.center.y, Box.zIndex]))
     }
 
     public async render(ctx: WebGL2RenderingContext) {

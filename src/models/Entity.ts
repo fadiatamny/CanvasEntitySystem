@@ -14,6 +14,7 @@ export abstract class Entity {
     protected _width: number
     protected _height: number
     protected _opacity: number
+    protected _angle: number // degree based angle
     protected _isDirty: boolean
 
     public get data() {
@@ -31,8 +32,16 @@ export abstract class Entity {
     public get height() {
         return this._height
     }
+    public get center() {
+        const bottom = this.top + this.height
+        const right = this.left + this.width
+        return { x: (this.left + right) / 2, y: (this.top + bottom) / 2 }
+    }
     public get opacity() {
         return this._opacity
+    }
+    public get angle() {
+        return this._angle
     }
     public get isDirty() {
         return this._isDirty
@@ -48,6 +57,7 @@ export abstract class Entity {
         this._width = entity?.width ?? 0
         this._height = entity?.height ?? 0
         this._opacity = entity?.opacity ?? 1
+        this._angle = entity?.angle ?? 0
         this._isDirty = true
     }
 
