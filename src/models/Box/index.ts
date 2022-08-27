@@ -187,9 +187,9 @@ export class Box extends Entity {
             return
         }
         ctx.uniform2fv(uniform, new Float32Array([ctx.canvas.width, ctx.canvas.height]))
-        uniform = ctx.getUniformLocation(Box._program, 'rotation')
+        uniform = ctx.getUniformLocation(Box._program, 'angle')
         if (!uniform || uniform < 0) {
-            console.log('Failed to get the storage location of rotation')
+            console.log('Failed to get the storage location of angle')
             return
         }
         ctx.uniform1f(uniform, degrees_to_radians(this._angle))
