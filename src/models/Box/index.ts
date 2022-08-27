@@ -7,21 +7,6 @@ export class Box extends Entity {
     private static zIndex = 0.1
     private static _program: WebGLProgram | null = null
 
-    private _rgb: number[]
-    private _verticesCount!: number
-    private _vertices!: Float32Array
-    private _vUv!: Float32Array
-    private _vertexDims!: number
-    private _fill!: number[]
-    private _color!: number[]
-    private _vao!: WebGLVertexArrayObject
-
-    constructor(box: Pick<Box, 'left' | 'top' | 'width' | 'height' | 'angle' | 'opacity'>) {
-        super(box)
-        this._rgb = [Math.random(), Math.random(), Math.random()]
-        this.genData()
-    }
-
     private static initShaders(ctx: WebGL2RenderingContext) {
         const vertexShader = GLUtils.makeShader(ctx, VertexShader, ctx.VERTEX_SHADER)
         const fragmentShader = GLUtils.makeShader(ctx, FragmentShader, ctx.FRAGMENT_SHADER)
@@ -48,64 +33,19 @@ export class Box extends Entity {
         return true
     }
 
-    public genData() {
-        // Vertices
-        this._vertexDims = 3
-        const top = this.top
-        const left = this.left
-        const bottom = this.top + this.height
-        const right = this.left + this.width
+    private _rgb!: number[]
+    private _verticesCount!: number
+    private _vertices!: Float32Array
+    private _vUv!: Float32Array
+    private _vertexDims!: number
+    private _fill!: number[]
+    private _color!: number[]
+    private _vao!: WebGLVertexArrayObject
 
-        this._vertices = new Float32Array([
-            // triangle 1
-            left,
-            top,
-            Box.zIndex,
-
-            right,
-            top,
-            Box.zIndex,
-
-            left,
-            bottom,
-            Box.zIndex,
-
-            // triagnle 2
-            right,
-            bottom,
-            Box.zIndex,
-
-            left,
-            bottom,
-            Box.zIndex,
-
-            right,
-            top,
-            Box.zIndex
-        ])
-
-        this._vUv = new Float32Array([
-            // triangle 1
-            0, 0,
-
-            1, 0,
-
-            0, 1,
-
-            // triagnle 2
-            1, 1,
-
-            0, 1,
-
-            1, 0
-        ])
-
-        this._verticesCount = this._vertices.length / this._vertexDims
-
-        // Fragment fill
-        this._fill = [...this._rgb, this.opacity]
-        // Fragment color
-        this._color = [...this._rgb, 1]
+    constructor(box: Pick<Box, 'left' | 'top' | 'width' | 'height' | 'angle' | 'opacity'>) {
+        super(box)
+        this._rgb = [Math.random(), Math.random(), Math.random()]
+        this._prepare()
     }
 
     private _bindVertexBuffers(ctx: WebGL2RenderingContext) {
@@ -163,15 +103,15 @@ export class Box extends Entity {
             return
         }
         // Assign the color variables
-        let uniform = ctx.getUniformLocation(Box._program, 'innerCol')
+        let uniform = ctx.getUniformLocation(Box._program, 'fillColor')
         if (!uniform || uniform < 0) {
-            console.log('Failed to get the storage location of innerCol')
+            console.log('Failed to get the storage location of fillColor')
             return
         }
         ctx.uniform4fv(uniform, this._fill)
-        uniform = ctx.getUniformLocation(Box._program, 'strokeCol')
+        uniform = ctx.getUniformLocation(Box._program, 'strokeColor')
         if (!uniform || uniform < 0) {
-            console.log('Failed to get the storage location of strokeCol')
+            console.log('Failed to get the storage location of strokeColor')
             return
         }
         ctx.uniform4fv(uniform, this._color)
@@ -199,6 +139,66 @@ export class Box extends Entity {
             return
         }
         ctx.uniform3fv(uniform, new Float32Array([this.center.x, this.center.y, Box.zIndex]))
+    }
+
+    private _prepare() {
+        // Vertices
+        this._vertexDims = 3
+        const top = this.top
+        const left = this.left
+        const bottom = this.top + this.height
+        const right = this.left + this.width
+
+        this._vertices = new Float32Array([
+            // triangle 1
+            left,
+            top,
+            Box.zIndex,
+
+            right,
+            top,
+            Box.zIndex,
+
+            left,
+            bottom,
+            Box.zIndex,
+
+            // triagnle 2
+            right,
+            bottom,
+            Box.zIndex,
+
+            left,
+            bottom,
+            Box.zIndex,
+
+            right,
+            top,
+            Box.zIndex
+        ])
+
+        this._vUv = new Float32Array([
+            // triangle 1
+            0, 0,
+
+            1, 0,
+
+            0, 1,
+
+            // triagnle 2
+            1, 1,
+
+            0, 1,
+
+            1, 0
+        ])
+
+        this._verticesCount = this._vertices.length / this._vertexDims
+
+        // Fragment fill
+        this._fill = [...this._rgb, this.opacity]
+        // Fragment color
+        this._color = [...this._rgb, 1]
     }
 
     public async render(ctx: WebGL2RenderingContext) {

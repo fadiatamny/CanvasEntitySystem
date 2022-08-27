@@ -1,8 +1,8 @@
 export default `#version 300 es
 precision highp float;
 
-uniform vec4 innerCol;
-uniform vec4 strokeCol;
+uniform vec4 fillColor;
+uniform vec4 strokeColor;
 uniform float borderWidth;
 uniform vec2 dims;
 
@@ -23,11 +23,11 @@ void main() {
     if (borderSize.x < pixel.x && borderSize.y < pixel.y &&
         pixel.x < textureEnd.x && pixel.y < textureEnd.y )
     {
-        color = innerCol;
+        color = fillColor;
     }
     else 
     {
-        color = strokeCol;
+        color = strokeColor;
     }
 }
 `
